@@ -1,4 +1,6 @@
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import BookDetails from "./BookDetails";
 
 function App() {
   const [books, setBooks] = useState([]);
@@ -11,20 +13,29 @@ function App() {
   }, []);
 
   return (
-    <div>
-      <h1>Book Haven</h1>
-      <h2>Book List</h2>
-      <ul>
-        {books.map((book) => (
-          <li key={book.id}>
-            <h3>{book.title}</h3>
-            <p>Author: {book.author}</p>
-            <p>Genre: {book.genre}</p>
-            <p>Rating: {book.average_rating}</p>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <Router>
+      <div>
+        <h1>Book Haven</h1>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <div>
+                <h2>Book List</h2>
+                <ul>
+                  {books.map((book) => (
+                    <li key={book.id}>
+                      <Link to={`/books/${book.id}`}>{book.title}</Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            }
+          />
+          <Route path="/books/:id" element={<BookDetails />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
