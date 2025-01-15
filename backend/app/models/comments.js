@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-    const Review = sequelize.define('Review', {
+    const Comment = sequelize.define('Comment', {
       id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -9,19 +9,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      book_id: {
+      review_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      rating: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        validate: {
-          min: 1,
-          max: 5,
-        },
-      },
-      review_text: {
+      comment_text: {
         type: DataTypes.TEXT,
         allowNull: false,
       },
@@ -31,11 +23,11 @@ module.exports = (sequelize, DataTypes) => {
       },
     });
   
-    Review.associate = (models) => {
-      Review.belongsTo(models.User, { foreignKey: 'user_id' });
-      Review.belongsTo(models.Book, { foreignKey: 'book_id' });
+    Comment.associate = (models) => {
+      Comment.belongsTo(models.User, { foreignKey: 'user_id' });
+      Comment.belongsTo(models.Review, { foreignKey: 'review_id' });
     };
   
-    return Review;
+    return Comment;
   };
   
