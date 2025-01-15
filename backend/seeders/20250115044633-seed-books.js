@@ -1,25 +1,28 @@
 'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up (queryInterface, Sequelize) {
-    /**
-     * Add seed commands here.
-     *
-     * Example:
-     * await queryInterface.bulkInsert('People', [{
-     *   name: 'John Doe',
-     *   isBetaMember: false
-     * }], {});
-    */
+  up: async (queryInterface) => {
+    await queryInterface.bulkInsert('Books', [
+      {
+        title: 'The Great Gatsby',
+        author: 'F. Scott Fitzgerald',
+        genre: 'Classic',
+        averageRating: 4.3,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        title: '1984',
+        author: 'George Orwell',
+        genre: 'Dystopian',
+        averageRating: 4.7,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]);
   },
 
-  async down (queryInterface, Sequelize) {
-    /**
-     * Add commands to revert seed here.
-     *
-     * Example:
-     * await queryInterface.bulkDelete('People', null, {});
-     */
-  }
+  down: async (queryInterface) => {
+    await queryInterface.bulkDelete('Books', null, {});
+  },
 };
