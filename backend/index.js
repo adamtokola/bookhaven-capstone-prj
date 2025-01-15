@@ -43,3 +43,66 @@ app.get("/books/:id", (req, res) => {
     res.status(404).send("Book not found");
   }
 });
+
+const reviews = [
+  {
+    id: 1,
+    book_id: 1,
+    user: "Adam Tokola",
+    rating: 4,
+    comment: "Good book!",
+  },
+  { id: 2, book_id: 2, 
+    user: "Ralya Ali", 
+    rating: 5,
+    comment: "Love you! <3" },
+];
+
+app.get("/books/:id/reviews", (req, res) => {
+  const bookId = parseInt(req.params.id);
+  const bookReviews = reviews.filter((review) => review.book_id === bookId);
+  res.json(bookReviews);
+});
+
+app.post("/books/:id/reviews", (req, res) => {
+  const { user, rating, comment } = req.body;
+  const bookId = parseInt(req.params.id);
+
+  const newReview = {
+    id: reviews.length + 1,
+    book_id: bookId,
+    user,
+    rating,
+    comment,
+  };
+
+  reviews.push(newReview);
+  res.status(201).json(newReview);
+});
+
+app.put("/reviews/:id", (req, res) => {
+  const reviewId = parseInt(req.params.id);
+  const { rating, comment } = req.body;
+
+  const review = reviews.find((r) => r.id === reviewId);
+  if (!review) {
+    return res.status(404).send("Review not found");
+  }
+
+  review.rating = rating || review.rating;
+  review.comment = comment || review.comment;
+
+  res.json(review);
+});
+
+app.delete("/reviews/:id", (req, res) => {
+  const reviewId = parseInt(req.params.id);
+  const reviewIndex = reviews.findIndex((r) => r.id === reviewId);
+
+  if (reviewIndex === -1) {
+    return res.status(404).send("Review not found");
+  }
+
+  reviews.splice(reviewIndex, 1);
+  res.status(204).send();
+});
