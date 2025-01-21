@@ -3,8 +3,8 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
-
 const { Sequelize, DataTypes } = require("sequelize");
+
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
   host: process.env.DB_HOST,
   dialect: "postgres",
@@ -22,9 +22,21 @@ const User = sequelize.define("User", {
   password: { type: DataTypes.STRING, allowNull: false },
 });
 
-sequelize.sync({ force: false })
-  .then(() => console.log("Database synced"))
-  .catch((err) => console.error("Error syncing database:", err));
+const Book = sequelize.define("Book", {
+  title: { type: DataTypes.STRING, allowNull: false },
+  genre: { type: DataTypes.STRING, allowNull: false },
+  averageRating: { type: DataTypes.FLOAT, allowNull: true },
+});
+
+const Review = sequelize.define("Review", {
+  rating: { type: DataTypes.INTEGER, allowNull: false },
+  comment: { type: DataTypes.STRING, allowNull: false },
+});
+
+Book.hasMany(Review, { foreignKey: "bookId" });
+Review.belongsTo(Book, { foreignKey: "bookId" });
+
+sequelize.sync({ force: false });
 
 const authenticate = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
@@ -53,11 +65,9 @@ app.post("/auth/register", async (req, res) => {
 
     res.status(201).json({ message: "User registered successfully!", user: newUser });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Server error. Please try again later." });
   }
 });
-
 
 app.post("/auth/login", async (req, res) => {
   const { email, password } = req.body;
@@ -80,6 +90,9 @@ app.post("/auth/login", async (req, res) => {
 app.get("/protected", authenticate, (req, res) => {
   res.send(`Hello ${req.user.email}, you have access to this protected route.`);
 });
+
+const booksRoutes = require("./app/routes/books");
+app.use("/books", booksRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
