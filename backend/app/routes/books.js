@@ -1,9 +1,22 @@
 const express = require("express");
-const { Sequelize, Op } = require("sequelize");
+const { Op } = require("sequelize");
 const { Book, Review } = require("../models");
-
 const router = express.Router();
 
+// Get all books
+router.get("/", async (req, res) => {
+  try {
+    const books = await Book.findAll({
+      attributes: ["id", "title", "genre", "averageRating"],
+    });
+    res.json(books);
+  } catch (err) {
+    console.error("Error fetching books:", err);
+    res.status(500).json({ message: "Error fetching books." });
+  }
+});
+
+// Search books by title
 router.get("/search", async (req, res) => {
   const { title } = req.query;
 
@@ -15,14 +28,19 @@ router.get("/search", async (req, res) => {
     const books = await Book.findAll({
       where: {
         title: {
-          [Op.iLike]: `%${title}%`,
+          [Op.iLike]: `%${title}%`, // Case-insensitive search
         },
       },
+      include: [{
+        model: Review,
+        attributes: ["rating"],
+      }],
       attributes: ["id", "title", "genre", "averageRating"],
     });
 
     res.json(books);
   } catch (err) {
+    console.error("Search error:", err);
     res.status(500).json({ message: "Error searching for books." });
   }
 });
