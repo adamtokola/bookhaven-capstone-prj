@@ -11,34 +11,45 @@ module.exports = (sequelize, DataTypes) => {
     },
     author_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'authors',
-        key: 'id'
-      }
+      allowNull: false
+    },
+    publisher_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true
     },
     publication_year: {
-      type: DataTypes.INTEGER
+      type: DataTypes.INTEGER,
+      allowNull: true
     },
     isbn: {
-      type: DataTypes.STRING(13)
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true
     },
     language: {
-      type: DataTypes.STRING(50),
-      defaultValue: 'English'
+      type: DataTypes.STRING,
+      allowNull: true
     },
     page_count: {
-      type: DataTypes.INTEGER
+      type: DataTypes.INTEGER,
+      allowNull: true
     },
     description: {
-      type: DataTypes.TEXT
+      type: DataTypes.TEXT,
+      allowNull: true
     },
     cover_image_url: {
-      type: DataTypes.TEXT
+      type: DataTypes.STRING,
+      allowNull: true
     },
     rating: {
-      type: DataTypes.DECIMAL(2,1),
-      allowNull: false
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      defaultValue: 0
+    },
+    genre: {
+      type: DataTypes.STRING,
+      allowNull: true
     }
   }, {
     tableName: 'books',
@@ -48,14 +59,24 @@ module.exports = (sequelize, DataTypes) => {
     updatedAt: 'updated_at'
   });
 
-  Book.associate = function(models) {
-    if (!models.Author) {
-      console.error('Author model not found!');
-      return;
-    }
+  Book.associate = (models) => {
     Book.belongsTo(models.Author, {
       foreignKey: 'author_id',
       as: 'author'
+    });
+    Book.belongsTo(models.Publisher, {
+      foreignKey: 'publisher_id',
+      as: 'publisher'
+    });
+    Book.belongsToMany(models.Genre, {
+      through: 'book_genres',
+      foreignKey: 'book_id',
+      otherKey: 'genre_id',
+      as: 'genres'
+    });
+    Book.hasMany(models.Review, {
+      foreignKey: 'book_id',
+      as: 'reviews'
     });
   };
 

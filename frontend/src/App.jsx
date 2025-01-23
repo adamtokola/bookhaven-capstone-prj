@@ -4,9 +4,9 @@ import { Layout } from './components/layout/Layout';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { HomePage } from './pages/HomePage';
+import { BooksPage } from './pages/BooksPage';
 
 // Placeholder components
-const Books = () => <div>Books Page</div>;
 const BookDetails = () => <div>Book Details Page</div>;
 const Profile = () => <div>Profile Page</div>;
 
@@ -19,7 +19,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/books" element={<Books />} />
+            <Route path="/books" element={<BooksPage />} />
             <Route path="/books/:id" element={<BookDetails />} />
             <Route path="/profile" element={<Profile />} />
           </Routes>

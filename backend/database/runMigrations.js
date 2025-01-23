@@ -1,15 +1,25 @@
 const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
-require('dotenv').config();
+const dotenv = require('dotenv');
 
-// Use existing environment variables
+// Load .env file from the correct location (backend folder)
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+
+// Verify environment variables are loaded
+console.log('Database connection config:', {
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT
+});
+
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
+  port: process.env.DB_PORT
 });
 
 async function runMigrations() {

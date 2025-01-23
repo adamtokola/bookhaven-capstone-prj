@@ -5,6 +5,7 @@ const { Op } = require("sequelize");
 const authMiddleware = require("../middleware/auth");
 const { bookRules } = require("../middleware/validate");
 const { Pool } = require('pg');
+const { Book, Author, Genre } = require('../models');
 
 // Create pool with logging
 const pool = new Pool({
@@ -19,33 +20,71 @@ pool.on('error', (err) => {
 // Get all books (with search and filter)
 router.get("/", async (req, res) => {
   try {
-    const { search, genre } = req.query;
-    let whereClause = {};
+    const { search, genre, page = 1, sortBy = 'title', order = 'asc' } = req.query;
+    const limit = 12;
+    const offset = (page - 1) * limit;
 
-    // Add search condition
+    // Base query options
+    const queryOptions = {
+      attributes: [
+        'id', 'title', 'publication_year', 'isbn', 
+        'language', 'page_count', 'description', 
+        'cover_image_url', 'rating'
+      ],
+      include: [
+        {
+          model: Author,
+          as: 'author',
+          attributes: ['name']
+        }
+      ],
+      order: [[sortBy, order.toUpperCase()]],
+      limit,
+      offset,
+      distinct: true
+    };
+
+    // Add search condition if provided
     if (search) {
-      whereClause = {
+      queryOptions.where = {
         [Op.or]: [
-          { title: { [Op.iLike]: `%${search}%` } },
-          { author: { [Op.iLike]: `%${search}%` } }
+          { title: { [Op.iLike]: `%${search}%` } }
         ]
       };
     }
 
-    // Add genre filter
-    if (genre) {
-      whereClause.genre = genre;
+    // Add genre filter if provided
+    if (genre && genre !== 'All') {
+      queryOptions.include.push({
+        model: Genre,
+        as: 'genres',
+        where: {
+          name: { [Op.iLike]: genre }
+        },
+        through: { attributes: [] }
+      });
+    } else {
+      // Include genres without filtering
+      queryOptions.include.push({
+        model: Genre,
+        as: 'genres',
+        through: { attributes: [] }
+      });
     }
 
-    const books = await db.Book.findAll({
-      where: whereClause,
-      order: [['title', 'ASC']]
+    const { count, rows: books } = await Book.findAndCountAll(queryOptions);
+
+    res.json({
+      books,
+      totalPages: Math.ceil(count / limit)
     });
 
-    res.json(books);  // Return array directly, not wrapped in an object
   } catch (error) {
-    console.error("Error fetching books:", error);
-    res.status(500).json({ error: "Error fetching books" });
+    console.error('Error in /books route:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch books',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
