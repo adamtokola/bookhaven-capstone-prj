@@ -371,8 +371,13 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "setupFilesAfterEnv": ["./tests/setup.js"],
-    "testMatch": ["**/__tests__/**/*.js", "**/?(*.)+(spec|test).js"],
+    "setupFilesAfterEnv": [
+      "./tests/setup.js"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.js",
+      "**/?(*.)+(spec|test).js"
+    ],
     "verbose": true,
     "forceExit": true,
     "clearMocks": true

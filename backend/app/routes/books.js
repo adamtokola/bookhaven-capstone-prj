@@ -4,6 +4,10 @@ const { Book } = require("../models");
 const { Op } = require("sequelize");
 const authMiddleware = require("../middleware/auth");
 const { bookRules } = require("../middleware/validate");
+const { Pool } = require('pg');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || 'postgresql://adamtokola:adam@localhost:5432/bookhaven'
+});
 
 // Get all books (with search and filter)
 router.get("/", async (req, res) => {
@@ -112,6 +116,42 @@ router.delete("/:id", async (req, res) => {
   } catch (error) {
     console.error("Error deleting book:", error);
     res.status(500).json({ error: "Error deleting book" });
+  }
+});
+
+// Search endpoint
+router.get('/search', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.json([]);
+    }
+
+    // Using the search_books function we created in our migrations
+    const query = `
+      SELECT 
+        b.id,
+        b.title,
+        a.name as author_name,
+        b.publication_year,
+        b.rating,
+        b.cover_image_url,
+        similarity(b.title, $1) as similarity
+      FROM books b
+      JOIN authors a ON b.author_id = a.id
+      WHERE 
+        similarity(b.title, $1) > 0.1 OR
+        b.title ILIKE $2 OR
+        a.name ILIKE $2
+      ORDER BY similarity DESC
+      LIMIT 10
+    `;
+
+    const result = await pool.query(query, [q, `%${q}%`]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ error: 'Search failed' });
   }
 });
 
