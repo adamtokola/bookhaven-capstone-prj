@@ -3,9 +3,9 @@ import { AuthProvider } from './context/AuthProvider';
 import { Layout } from './components/layout/Layout';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
+import { HomePage } from './pages/HomePage';
 
-// Placeholder components - we'll create these next
-const Home = () => <div>Home Page</div>;
+// Placeholder components
 const Books = () => <div>Books Page</div>;
 const BookDetails = () => <div>Book Details Page</div>;
 const Profile = () => <div>Profile Page</div>;
@@ -16,7 +16,7 @@ function App() {
       <AuthProvider>
         <Layout>
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/books" element={<Books />} />
