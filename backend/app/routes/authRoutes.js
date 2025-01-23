@@ -4,37 +4,135 @@ const jwt = require("jsonwebtoken");
 const { User } = require("../models");
 const router = express.Router();
 
-const SECRET_KEY = process.env.SECRET_KEY || "your_secret_key";
-
-router.post("/register", async (req, res) => {
+// Input validation middleware
+const validateRegistration = (req, res, next) => {
   const { username, email, password } = req.body;
+  
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+  
+  if (password.length < 6) {
+    return res.status(400).json({ error: "Password must be at least 6 characters" });
+  }
+  
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: "Invalid email format" });
+  }
+  
+  next();
+};
+
+// Register route
+router.post("/register", async (req, res) => {
   try {
+    const { username, email, password } = req.body;
+
+    // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) return res.status(400).send("User already exists.");
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already registered" });
+    }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ username, email, password: hashedPassword });
+    // Hash password
+    const password_hash = await bcrypt.hash(password, 10);
 
-    res.status(201).json({ message: "User registered successfully!", user: { id: newUser.id, username, email } });
+    // Create user
+    const user = await User.create({
+      username,
+      email,
+      password_hash,
+      role: 'user'
+    });
+
+    // Generate token
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.status(201).json({
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      }
+    });
+
   } catch (error) {
-    res.status(500).send("Server error");
+    console.error("Registration error:", error);
+    res.status(500).json({ error: "Server error during registration" });
   }
 });
 
+// Login route
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
   try {
+    const { email, password } = req.body;
+
+    // Find user
     const user = await User.findOne({ where: { email } });
-    if (!user) return res.status(400).send("Invalid email or password.");
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) return res.status(400).send("Invalid email or password.");
+    // Check password
+    const validPassword = await bcrypt.compare(password, user.password_hash);
+    if (!validPassword) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
 
-    const token = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: "1h" });
+    // Generate token
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
-    res.json({ token, message: "Login successful!" });
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      }
+    });
+
   } catch (error) {
-    res.status(500).send("Server error");
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Server error during login" });
+  }
+});
+
+// Get current user route (protected)
+router.get("/me", async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ error: "No token provided" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findByPk(decoded.id, {
+      attributes: { exclude: ["password_hash"] }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(user);
+  } catch (error) {
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+    console.error("Auth error:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
