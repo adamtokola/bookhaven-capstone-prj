@@ -1,32 +1,61 @@
 module.exports = (sequelize, DataTypes) => {
-  const Book = sequelize.define("Book", {
-    title: { 
-      type: DataTypes.STRING, 
-      allowNull: false 
+  const Book = sequelize.define('Book', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
     },
-    author: { 
-      type: DataTypes.STRING, 
-      allowNull: false 
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false
     },
-    genre: { 
-      type: DataTypes.STRING, 
-      allowNull: false 
+    author_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'authors',
+        key: 'id'
+      }
     },
-    averageRating: { 
-      type: DataTypes.FLOAT, 
-      defaultValue: 0,
-      field: 'average_rating'
+    publication_year: {
+      type: DataTypes.INTEGER
+    },
+    isbn: {
+      type: DataTypes.STRING(13)
+    },
+    language: {
+      type: DataTypes.STRING(50),
+      defaultValue: 'English'
+    },
+    page_count: {
+      type: DataTypes.INTEGER
+    },
+    description: {
+      type: DataTypes.TEXT
+    },
+    cover_image_url: {
+      type: DataTypes.TEXT
+    },
+    rating: {
+      type: DataTypes.DECIMAL(2,1),
+      allowNull: false
     }
   }, {
+    tableName: 'books',
     underscored: true,
     timestamps: true,
-    tableName: 'books'
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
   });
 
-  Book.associate = (models) => {
-    Book.hasMany(models.Review, {
-      foreignKey: "book_id",
-      as: "reviews"
+  Book.associate = function(models) {
+    if (!models.Author) {
+      console.error('Author model not found!');
+      return;
+    }
+    Book.belongsTo(models.Author, {
+      foreignKey: 'author_id',
+      as: 'author'
     });
   };
 

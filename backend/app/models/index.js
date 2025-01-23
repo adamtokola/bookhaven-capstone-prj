@@ -19,28 +19,30 @@ if (config.use_env_variable) {
     config.password,
     {
       ...config,
-      define: {
-        underscored: false,
-        timestamps: true
-      }
+      logging: console.log // Enable logging to see SQL queries
     }
   );
 }
 
-// Import models
-const Book = require('./book')(sequelize, Sequelize.DataTypes);
-const User = require('./user')(sequelize, Sequelize.DataTypes);
-const Review = require('./review')(sequelize, Sequelize.DataTypes);
-const Comment = require('./comment')(sequelize, Sequelize.DataTypes);
-
-// Add models to db object
-db.Book = Book;
-db.User = User;
-db.Review = Review;
-db.Comment = Comment;
+// Load models
+fs.readdirSync(__dirname)
+  .filter(file => {
+    return (
+      file.indexOf('.') !== 0 &&
+      file !== basename &&
+      file.slice(-3) === '.js' &&
+      file.indexOf('.test.js') === -1
+    );
+  })
+  .forEach(file => {
+    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
+    db[model.name] = model;
+    console.log(`Loaded model: ${model.name}`); // Add logging to see which models are loaded
+  });
 
 // Set up associations
 Object.keys(db).forEach(modelName => {
+  console.log(`Setting up associations for: ${modelName}`); // Add logging
   if (db[modelName].associate) {
     db[modelName].associate(db);
   }

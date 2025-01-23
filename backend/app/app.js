@@ -8,7 +8,14 @@ const userRoutes = require("./routes/users");
 
 const app = express();
 
-app.use(cors());
+// Configure CORS
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:5182', 'http://localhost:5173'], // Include all possible Vite ports
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
 app.get('/test', (req, res) => {

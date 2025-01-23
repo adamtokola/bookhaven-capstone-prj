@@ -1,12 +1,19 @@
 const express = require("express");
 const router = express.Router();
-const { Book } = require("../models");
+const db = require("../models");
 const { Op } = require("sequelize");
 const authMiddleware = require("../middleware/auth");
 const { bookRules } = require("../middleware/validate");
 const { Pool } = require('pg');
+
+// Create pool with logging
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || 'postgresql://adamtokola:adam@localhost:5432/bookhaven'
+});
+
+// Test database connection
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
 });
 
 // Get all books (with search and filter)
@@ -30,7 +37,7 @@ router.get("/", async (req, res) => {
       whereClause.genre = genre;
     }
 
-    const books = await Book.findAll({
+    const books = await db.Book.findAll({
       where: whereClause,
       order: [['title', 'ASC']]
     });
@@ -42,10 +49,77 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get book by ID
+// Search endpoint - MUST come before /:id route
+router.get('/search', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.json([]);
+    }
+
+    console.log('Searching for:', q);
+
+    const books = await db.Book.findAll({
+      where: {
+        [Op.or]: [
+          { title: { [Op.iLike]: `%${q}%` } }
+        ]
+      },
+      include: [{
+        model: db.Author,
+        as: 'author',
+        attributes: ['name']
+      }],
+      limit: 10,
+      attributes: [
+        'id', 
+        'title', 
+        'publication_year',
+        'rating',
+        'cover_image_url'
+      ]
+    });
+
+    const formattedResults = books.map(book => ({
+      id: book.id,
+      title: book.title,
+      author_name: book.author ? book.author.name : null,
+      publication_year: book.publication_year,
+      rating: book.rating,
+      cover_image_url: book.cover_image_url
+    }));
+
+    console.log('Search results:', formattedResults);
+    res.json(formattedResults);
+
+  } catch (error) {
+    console.error('Search error:', {
+      message: error.message,
+      stack: error.stack,
+      models: Object.keys(db)
+    });
+    res.status(500).json({ 
+      error: 'Search failed',
+      details: error.message 
+    });
+  }
+});
+
+// Get book by ID - comes AFTER /search route
 router.get("/:id", async (req, res) => {
   try {
-    const book = await Book.findByPk(req.params.id);
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid book ID" });
+    }
+
+    const book = await db.Book.findByPk(id, {
+      include: [{
+        model: db.Author,
+        as: 'author',
+        attributes: ['name']
+      }]
+    });
     
     if (!book) {
       return res.status(404).json({ error: "Book not found" });
@@ -65,7 +139,7 @@ router.post("/",
   async (req, res) => {
     try {
       const { title, author, genre, averageRating } = req.body;
-      const book = await Book.create({
+      const book = await db.Book.create({
         title,
         author,
         genre,
@@ -81,7 +155,7 @@ router.post("/",
 // Update book
 router.put("/:id", async (req, res) => {
   try {
-    const book = await Book.findByPk(req.params.id);
+    const book = await db.Book.findByPk(req.params.id);
     
     if (!book) {
       return res.status(404).json({ error: "Book not found" });
@@ -105,7 +179,7 @@ router.put("/:id", async (req, res) => {
 // Delete book
 router.delete("/:id", async (req, res) => {
   try {
-    const book = await Book.findByPk(req.params.id);
+    const book = await db.Book.findByPk(req.params.id);
     
     if (!book) {
       return res.status(404).json({ error: "Book not found" });
@@ -119,39 +193,21 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// Search endpoint
-router.get('/search', async (req, res) => {
+// Test endpoint to check database connection
+router.get('/test-db', async (req, res) => {
   try {
-    const { q } = req.query;
-    if (!q) {
-      return res.json([]);
-    }
-
-    // Using the search_books function we created in our migrations
-    const query = `
-      SELECT 
-        b.id,
-        b.title,
-        a.name as author_name,
-        b.publication_year,
-        b.rating,
-        b.cover_image_url,
-        similarity(b.title, $1) as similarity
-      FROM books b
-      JOIN authors a ON b.author_id = a.id
-      WHERE 
-        similarity(b.title, $1) > 0.1 OR
-        b.title ILIKE $2 OR
-        a.name ILIKE $2
-      ORDER BY similarity DESC
-      LIMIT 10
-    `;
-
-    const result = await pool.query(query, [q, `%${q}%`]);
-    res.json(result.rows);
+    const result = await pool.query('SELECT NOW()');
+    res.json({ 
+      success: true, 
+      timestamp: result.rows[0].now,
+      message: 'Database connection successful'
+    });
   } catch (error) {
-    console.error('Search error:', error);
-    res.status(500).json({ error: 'Search failed' });
+    console.error('Database test error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
   }
 });
 
