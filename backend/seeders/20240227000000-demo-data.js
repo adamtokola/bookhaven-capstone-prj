@@ -4,13 +4,11 @@ const bcrypt = require('bcrypt');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    // First, delete existing data
     await queryInterface.bulkDelete('comments', null, {});
     await queryInterface.bulkDelete('reviews', null, {});
     await queryInterface.bulkDelete('books', null, {});
     await queryInterface.bulkDelete('users', null, {});
 
-    // Create users
     const users = await queryInterface.bulkInsert('users', [
       {
         username: 'john_doe',
@@ -30,7 +28,6 @@ module.exports = {
       }
     ], { returning: true });
 
-    // Create books
     const books = await queryInterface.bulkInsert('books', [
       {
         title: 'The Great Gatsby',
@@ -58,7 +55,6 @@ module.exports = {
       }
     ], { returning: true });
 
-    // Create reviews
     const reviews = await queryInterface.bulkInsert('reviews', [
       {
         userId: 1,
@@ -78,7 +74,6 @@ module.exports = {
       }
     ], { returning: true });
 
-    // Create comments
     return queryInterface.bulkInsert('comments', [
       {
         userId: 2,

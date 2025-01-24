@@ -4,11 +4,10 @@ const { User, Review, Book } = require("../models");
 const authMiddleware = require("../middleware/auth");
 const bcrypt = require("bcrypt");
 
-// Get own profile
 router.get("/profile", authMiddleware, async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
-      attributes: { exclude: ['password_hash'] }  // Don't send password hash
+      attributes: { exclude: ['password_hash'] } 
     });
     
     if (!user) {
@@ -22,7 +21,6 @@ router.get("/profile", authMiddleware, async (req, res) => {
   }
 });
 
-// Update profile
 router.put("/profile", authMiddleware, async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id);
@@ -33,7 +31,6 @@ router.put("/profile", authMiddleware, async (req, res) => {
 
     const { username, email, currentPassword, newPassword } = req.body;
 
-    // If updating password
     if (currentPassword && newPassword) {
       const validPassword = await bcrypt.compare(currentPassword, user.password_hash);
       if (!validPassword) {
@@ -44,7 +41,6 @@ router.put("/profile", authMiddleware, async (req, res) => {
       await user.update({ password_hash });
     }
 
-    // Update other fields if provided
     if (username || email) {
       await user.update({
         username: username || user.username,
@@ -52,7 +48,6 @@ router.put("/profile", authMiddleware, async (req, res) => {
       });
     }
 
-    // Return updated user without password hash
     const updatedUser = await User.findByPk(user.id, {
       attributes: { exclude: ['password_hash'] }
     });
@@ -64,7 +59,6 @@ router.put("/profile", authMiddleware, async (req, res) => {
   }
 });
 
-// Get user's reviews
 router.get("/:userId/reviews", authMiddleware, async (req, res) => {
   try {
     const { userId } = req.params;
@@ -87,7 +81,6 @@ router.get("/:userId/reviews", authMiddleware, async (req, res) => {
   }
 });
 
-// Delete account
 router.delete("/profile", authMiddleware, async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id);

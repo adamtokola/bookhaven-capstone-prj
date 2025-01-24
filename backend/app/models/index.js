@@ -19,12 +19,11 @@ if (config.use_env_variable) {
     config.password,
     {
       ...config,
-      logging: console.log // Enable logging to see SQL queries
+      logging: console.log 
     }
   );
 }
 
-// Load models
 fs.readdirSync(__dirname)
   .filter(file => {
     return (
@@ -37,12 +36,11 @@ fs.readdirSync(__dirname)
   .forEach(file => {
     const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
     db[model.name] = model;
-    console.log(`Loaded model: ${model.name}`); // Add logging to see which models are loaded
+    console.log(`Loaded model: ${model.name}`); 
   });
 
-// Set up associations
 Object.keys(db).forEach(modelName => {
-  console.log(`Setting up associations for: ${modelName}`); // Add logging
+  console.log(`Setting up associations for: ${modelName}`); 
   if (db[modelName].associate) {
     db[modelName].associate(db);
   }

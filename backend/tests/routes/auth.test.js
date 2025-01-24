@@ -6,7 +6,6 @@ const bcrypt = require('bcrypt');
 
 describe('Auth Routes', () => {
   beforeEach(async () => {
-    // Clear users before each test
     await User.destroy({ where: {}, force: true });
   });
 
@@ -25,7 +24,6 @@ describe('Auth Routes', () => {
       expect(res.status).toBe(201);
       expect(res.body.token).toBeDefined();
       
-      // Verify user was created
       const user = await User.findOne({ where: { email: userData.email }});
       expect(user).toBeDefined();
       expect(user.username).toBe(userData.username);
@@ -33,14 +31,12 @@ describe('Auth Routes', () => {
     });
 
     test('Cannot register with existing email', async () => {
-      // Create a user first
       await User.create({
         username: 'existinguser',
         email: 'test@test.com',
         password_hash: await bcrypt.hash('password123', 10)
       });
 
-      // Try to register with same email
       const res = await request(app)
         .post('/auth/register')
         .send({
@@ -56,7 +52,6 @@ describe('Auth Routes', () => {
 
   describe('POST /auth/login', () => {
     beforeEach(async () => {
-      // Create test user before each login test
       await User.create({
         username: 'testuser',
         email: 'test@test.com',

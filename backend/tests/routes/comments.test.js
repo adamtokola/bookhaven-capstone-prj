@@ -10,7 +10,6 @@ describe('Comment Routes', () => {
   let testReview;
   
   beforeEach(async () => {
-    // Create test user
     testUser = await User.create({
       username: 'testuser',
       email: 'test@test.com',
@@ -18,7 +17,6 @@ describe('Comment Routes', () => {
       role: 'user'
     });
     
-    // Create test book
     testBook = await Book.create({
       title: 'Test Book',
       author: 'Test Author',
@@ -26,7 +24,6 @@ describe('Comment Routes', () => {
       averageRating: 0
     });
 
-    // Create test review
     testReview = await Review.create({
       userId: testUser.id,
       bookId: testBook.id,
@@ -84,7 +81,6 @@ describe('Comment Routes', () => {
 
   describe('GET /reviews/:reviewId/comments', () => {
     test('Can get review comments', async () => {
-      // Create some comments
       await Comment.create({
         userId: testUser.id,
         reviewId: testReview.id,
@@ -124,13 +120,11 @@ describe('Comment Routes', () => {
 
       expect(res.status).toBe(204);
 
-      // Verify comment was deleted
       const deletedComment = await Comment.findByPk(comment.id);
       expect(deletedComment).toBeNull();
     });
 
     test('Cannot delete other user\'s comment', async () => {
-      // Create another user
       const otherUser = await User.create({
         username: 'otheruser',
         email: 'other@test.com',
@@ -138,7 +132,6 @@ describe('Comment Routes', () => {
         role: 'user'
       });
 
-      // Create comment by other user
       const comment = await Comment.create({
         userId: otherUser.id,
         reviewId: testReview.id,
@@ -151,7 +144,6 @@ describe('Comment Routes', () => {
 
       expect(res.status).toBe(403);
 
-      // Verify comment still exists
       const existingComment = await Comment.findByPk(comment.id);
       expect(existingComment).not.toBeNull();
     });

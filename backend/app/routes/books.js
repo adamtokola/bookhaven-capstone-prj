@@ -7,24 +7,20 @@ const { bookRules } = require("../middleware/validate");
 const { Pool } = require('pg');
 const { Book, Author, Genre } = require('../models');
 
-// Create pool with logging
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || 'postgresql://adamtokola:adam@localhost:5432/bookhaven'
 });
 
-// Test database connection
 pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);
 });
 
-// Get all books (with search and filter)
 router.get("/", async (req, res) => {
   try {
     const { search, genre, page = 1, sortBy = 'title', order = 'asc' } = req.query;
     const limit = 12;
     const offset = (page - 1) * limit;
 
-    // Base query options
     const queryOptions = {
       attributes: [
         'id', 'title', 'publication_year', 'isbn', 
@@ -44,7 +40,6 @@ router.get("/", async (req, res) => {
       distinct: true
     };
 
-    // Add search condition if provided
     if (search) {
       queryOptions.where = {
         [Op.or]: [
@@ -53,7 +48,6 @@ router.get("/", async (req, res) => {
       };
     }
 
-    // Add genre filter if provided
     if (genre && genre !== 'All') {
       queryOptions.include.push({
         model: Genre,
@@ -64,7 +58,6 @@ router.get("/", async (req, res) => {
         through: { attributes: [] }
       });
     } else {
-      // Include genres without filtering
       queryOptions.include.push({
         model: Genre,
         as: 'genres',
@@ -88,7 +81,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Search endpoint - MUST come before /:id route
 router.get('/search', async (req, res) => {
   try {
     const { q } = req.query;
@@ -144,7 +136,6 @@ router.get('/search', async (req, res) => {
   }
 });
 
-// Get book by ID - comes AFTER /search route
 router.get("/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
@@ -171,7 +162,6 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Create book
 router.post("/",
   authMiddleware,
   bookRules.create,
@@ -191,7 +181,6 @@ router.post("/",
     }
 });
 
-// Update book
 router.put("/:id", async (req, res) => {
   try {
     const book = await db.Book.findByPk(req.params.id);
@@ -215,7 +204,6 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Delete book
 router.delete("/:id", async (req, res) => {
   try {
     const book = await db.Book.findByPk(req.params.id);
@@ -232,7 +220,6 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// Test endpoint to check database connection
 router.get('/test-db', async (req, res) => {
   try {
     const result = await pool.query('SELECT NOW()');

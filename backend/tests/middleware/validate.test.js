@@ -50,7 +50,7 @@ describe('Validation Middleware', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({
           rating: 4,
-          reviewText: 'Short'  // Too short
+          reviewText: 'Short' 
         });
 
       expect(res.status).toBe(400);
@@ -64,7 +64,7 @@ describe('Validation Middleware', () => {
         .post(`/reviews/1/comments`)
         .set('Authorization', `Bearer ${token}`)
         .send({
-          commentText: ''  // Empty comment
+          commentText: ''  
         });
 
       expect(res.status).toBe(400);

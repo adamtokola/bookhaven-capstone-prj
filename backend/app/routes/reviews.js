@@ -4,7 +4,6 @@ const { Book, Review, User } = require("../models");
 const authMiddleware = require("../middleware/auth");
 const { reviewRules } = require("../middleware/validate");
 
-// Create a review for a book
 router.post("/books/:bookId/reviews", 
   authMiddleware, 
   reviewRules.create,
@@ -14,13 +13,11 @@ router.post("/books/:bookId/reviews",
       const { rating, reviewText } = req.body;
       const userId = parseInt(req.user.id);
 
-      // Check if book exists
       const book = await Book.findByPk(bookId);
       if (!book) {
         return res.status(404).json({ error: "Book not found" });
       }
 
-      // Check if user already reviewed this book
       const existingReview = await Review.findOne({
         where: { 
           userId,
@@ -31,7 +28,6 @@ router.post("/books/:bookId/reviews",
         return res.status(400).json({ error: "You've already reviewed this book" });
       }
 
-      // Create review with explicit userId and bookId
       const review = await Review.create({
         userId,
         bookId,
@@ -39,7 +35,6 @@ router.post("/books/:bookId/reviews",
         reviewText
       });
 
-      // Fetch the created review with associations
       const createdReview = await Review.findOne({
         where: { id: review.id },
         include: [
@@ -56,7 +51,6 @@ router.post("/books/:bookId/reviews",
         ]
       });
 
-      // Update book's average rating
       const bookReviews = await Review.findAll({
         where: { bookId }
       });
@@ -70,7 +64,6 @@ router.post("/books/:bookId/reviews",
     }
 });
 
-// Get reviews for a book
 router.get("/books/:bookId/reviews", async (req, res) => {
   try {
     const bookId = parseInt(req.params.bookId);
@@ -99,7 +92,6 @@ router.get("/books/:bookId/reviews", async (req, res) => {
   }
 });
 
-// Update a review
 router.put("/books/:bookId/reviews/:reviewId", authMiddleware, async (req, res) => {
   try {
     const reviewId = parseInt(req.params.reviewId);
@@ -121,7 +113,6 @@ router.put("/books/:bookId/reviews/:reviewId", authMiddleware, async (req, res) 
 
     await review.update({ rating, reviewText });
 
-    // Fetch updated review with associations
     const updatedReview = await Review.findOne({
       where: { id: reviewId },
       include: [
@@ -138,7 +129,6 @@ router.put("/books/:bookId/reviews/:reviewId", authMiddleware, async (req, res) 
       ]
     });
 
-    // Update book's average rating
     const bookReviews = await Review.findAll({
       where: { bookId }
     });

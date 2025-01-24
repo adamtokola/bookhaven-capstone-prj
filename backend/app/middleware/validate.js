@@ -1,6 +1,5 @@
 const { body, param, validationResult } = require('express-validator');
 
-// Validation middleware
 const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -9,7 +8,6 @@ const validate = (req, res, next) => {
   next();
 };
 
-// Validation rules
 const bookRules = {
   create: [
     body('title').trim().notEmpty().withMessage('Title is required'),

@@ -9,7 +9,6 @@ describe('Review Routes', () => {
   let testBook;
   
   beforeEach(async () => {
-    // Create test user
     testUser = await User.create({
       username: 'testuser',
       email: 'test@test.com',
@@ -17,7 +16,6 @@ describe('Review Routes', () => {
       role: 'user'
     });
     
-    // Create test book
     testBook = await Book.create({
       title: 'Test Book',
       author: 'Test Author',
@@ -52,7 +50,6 @@ describe('Review Routes', () => {
     });
 
     test('Cannot review same book twice', async () => {
-      // Create first review
       await Review.create({
         userId: testUser.id,
         bookId: testBook.id,
@@ -60,7 +57,6 @@ describe('Review Routes', () => {
         reviewText: 'First review'
       });
 
-      // Try to create second review
       const res = await request(app)
         .post(`/books/${testBook.id}/reviews`)
         .set('Authorization', `Bearer ${token}`)
@@ -86,7 +82,6 @@ describe('Review Routes', () => {
 
   describe('GET /books/:bookId/reviews', () => {
     test('Can get book reviews', async () => {
-      // Create reviews
       await Review.create({
         userId: testUser.id,
         bookId: testBook.id,
@@ -114,7 +109,6 @@ describe('Review Routes', () => {
 
   describe('PUT /books/:bookId/reviews/:reviewId', () => {
     test('Can update own review', async () => {
-      // Create review
       const review = await Review.create({
         userId: testUser.id,
         bookId: testBook.id,

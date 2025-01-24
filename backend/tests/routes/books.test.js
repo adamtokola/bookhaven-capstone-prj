@@ -9,10 +9,8 @@ describe('Book Routes', () => {
   let testUser;
   
   beforeEach(async () => {
-    // Clear books before each test
     await Book.destroy({ where: {}, force: true });
     
-    // Create test user and token
     testUser = await User.create({
       username: 'testuser',
       email: 'test@test.com',
@@ -29,7 +27,6 @@ describe('Book Routes', () => {
 
   describe('GET /books', () => {
     test('Can get list of books', async () => {
-      // Create test books
       await Book.bulkCreate([
         {
           title: 'Test Book 1',

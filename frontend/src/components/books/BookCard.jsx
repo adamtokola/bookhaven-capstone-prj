@@ -10,7 +10,6 @@ import {
   import { Link } from 'react-router-dom';
   
   export const BookCard = ({ book }) => {
-    // Convert rating to number or default to 0
     const rating = Number(book.rating) || 0;
 
     return (

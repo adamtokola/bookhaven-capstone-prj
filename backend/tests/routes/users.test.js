@@ -106,7 +106,6 @@ describe('User Routes', () => {
 
   describe('GET /users/:userId/reviews', () => {
     test('Can get user reviews', async () => {
-      // Create a book
       const book = await Book.create({
         title: 'Test Book',
         author: 'Test Author',
@@ -114,7 +113,6 @@ describe('User Routes', () => {
         averageRating: 0
       });
 
-      // Create reviews
       await Review.create({
         userId: testUser.id,
         bookId: book.id,
@@ -148,12 +146,11 @@ describe('User Routes', () => {
         .delete('/users/profile')
         .set('Authorization', `Bearer ${token}`)
         .send({
-          password: 'password123'  // Require password for deletion
+          password: 'password123' 
         });
 
       expect(res.status).toBe(204);
 
-      // Verify user was deleted
       const deletedUser = await User.findByPk(testUser.id);
       expect(deletedUser).toBeNull();
     });
@@ -168,7 +165,6 @@ describe('User Routes', () => {
 
       expect(res.status).toBe(401);
 
-      // Verify user still exists
       const user = await User.findByPk(testUser.id);
       expect(user).toBeDefined();
     });

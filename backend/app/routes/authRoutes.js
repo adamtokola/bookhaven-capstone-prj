@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 const { User } = require("../models");
 const router = express.Router();
 
-// Input validation middleware
 const validateRegistration = (req, res, next) => {
   const { username, email, password } = req.body;
   
@@ -24,21 +23,17 @@ const validateRegistration = (req, res, next) => {
   next();
 };
 
-// Register route
 router.post("/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: "Email already registered" });
     }
 
-    // Hash password
     const password_hash = await bcrypt.hash(password, 10);
 
-    // Create user
     const user = await User.create({
       username,
       email,
@@ -46,7 +41,6 @@ router.post("/register", async (req, res) => {
       role: 'user'
     });
 
-    // Generate token
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
@@ -69,24 +63,20 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Login route
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user
     const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    // Check password
     const validPassword = await bcrypt.compare(password, user.password_hash);
     if (!validPassword) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    // Generate token
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
@@ -109,7 +99,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Get current user route (protected)
 router.get("/me", async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];

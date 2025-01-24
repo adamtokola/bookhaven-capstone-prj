@@ -4,7 +4,6 @@ const { Review, Comment, User } = require("../models");
 const authMiddleware = require("../middleware/auth");
 const { commentRules } = require("../middleware/validate");
 
-// Create a comment
 router.post("/reviews/:reviewId/comments", 
   authMiddleware,
   commentRules.create,
@@ -14,7 +13,6 @@ router.post("/reviews/:reviewId/comments",
       const { commentText } = req.body;
       const userId = parseInt(req.user.id);
 
-      // Check if review exists
       const review = await Review.findByPk(reviewId);
       if (!review) {
         return res.status(404).json({ error: "Review not found" });
@@ -26,7 +24,6 @@ router.post("/reviews/:reviewId/comments",
         commentText
       });
 
-      // Fetch created comment with associations
       const createdComment = await Comment.findOne({
         where: { id: comment.id },
         include: [{
@@ -43,7 +40,6 @@ router.post("/reviews/:reviewId/comments",
     }
 });
 
-// Get comments for a review
 router.get("/reviews/:reviewId/comments", async (req, res) => {
   try {
     const reviewId = parseInt(req.params.reviewId);
@@ -65,7 +61,6 @@ router.get("/reviews/:reviewId/comments", async (req, res) => {
   }
 });
 
-// Delete a comment
 router.delete("/reviews/:reviewId/comments/:commentId", authMiddleware, async (req, res) => {
   try {
     const commentId = parseInt(req.params.commentId);
@@ -79,7 +74,6 @@ router.delete("/reviews/:reviewId/comments/:commentId", authMiddleware, async (r
       return res.status(404).json({ error: "Comment not found" });
     }
 
-    // Check ownership before deletion
     if (comment.userId !== userId) {
       return res.status(403).json({ error: "Not authorized to delete this comment" });
     }
